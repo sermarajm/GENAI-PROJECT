@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  pgvector:
+    image: pgvector/pgvector:pg16 # Uses PostgreSQL 16 with pgvector pre-installed
+    container_name: pgvector_db
+    environment:
+      POSTGRES_USER: postgres # Replace with your desired username
+      POSTGRES_PASSWORD: Serma@2003 # Replace with your desired password
+      POSTGRES_DB: gen_ai # Optional: specify your database name
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgvector_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  pgvector_data:

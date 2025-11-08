@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knowledge Base File Upload</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fb;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .upload-container {
+            width: 100%;
+            max-width: 800px;
+            background-color: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            text-align: center;
+        }
+
+        .upload-header {
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .upload-header h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #4e54c8;
+        }
+
+        .upload-header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 12px;
+            padding: 40px;
+            margin: 30px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: #fafafa;
+        }
+
+        .upload-area:hover {
+            border-color: #4e54c8;
+            background-color: #f0f4ff;
+        }
+
+        .upload-area.drag-over {
+            border-color: #4e54c8;
+            background-color: #e8f0ff;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: #aaa;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .upload-text strong {
+            color: #4e54c8;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .selected-file {
+            margin: 30px 0;
+            text-align: left;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            display: none;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: white;
+            border-radius: 6px;
+            border-left: 3px solid #4e54c8;
+        }
+
+        .file-icon {
+            color: #4e54c8;
+            margin-right: 12px;
+            font-size: 18px;
+        }
+
+        .file-name {
+            flex: 1;
+            font-size: 0.95rem;
+            color: #333;
+        }
+
+        .file-remove {
+            color: #ff6b6b;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0;
+            margin-left: 10px;
+        }
+
+        .upload-btn {
+            background-color: #4e54c8;
+            color: white;
+            border: none;
+            border-radius: 24px;
+            padding: 14px 32px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-top: 20px;
+        }
+
+        .upload-btn:hover {
+            background-color: #3a3f98;
+        }
+
+        .upload-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .status-message {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            display: none;
+            font-weight: 500;
+        }
+
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .progress-container {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: #4e54c8;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 0.9rem;
+            color: #666;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="upload-container">
+        <div class="upload-header">
+            <h1>Create Knowledge Base</h1>
+            <p>Upload a single document to build your knowledge base for the AI assistant</p>
+        </div>
+
+        <div class="upload-area" id="upload-area">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">
+                <strong>Click to upload</strong> or drag and drop a file here
+            </div>
+            <div class="upload-text">
+                <small>PDF, DOCX, TXT, CSV, and other common formats supported (one file only)</small>
+            </div>
+            <input type="file" id="file-input" class="file-input"
+                accept=".pdf,.doc,.docx,.txt,.csv,.md,.rtf,.ppt,.pptx">
+        </div>
+
+        <div class="selected-file" id="selected-file">
+            <div class="file-item">
+                <span class="file-icon" id="file-icon">📎</span>
+                <span class="file-name" id="file-name"></span>
+                <button class="file-remove" id="file-remove">&times;</button>
+            </div>
+        </div>
+
+        <div class="progress-container" id="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div class="progress-text" id="progress-text">0% uploaded</div>
+        </div>
+
+        <button class="upload-btn" id="upload-btn" disabled>Build Knowledge Base</button>
+
+        <div class="status-message" id="status-message"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const uploadArea = document.getElementById('upload-area');
+            const fileInput = document.getElementById('file-input');
+            const selectedFile = document.getElementById('selected-file');
+            const fileName = document.getElementById('file-name');
+            const fileIcon = document.getElementById('file-icon');
+            const fileRemove = document.getElementById('file-remove');
+            const uploadBtn = document.getElementById('upload-btn');
+            const statusMessage = document.getElementById('status-message');
+            const progressContainer = document.getElementById('progress-container');
+            const progressFill = document.getElementById('progress-fill');
+            const progressText = document.getElementById('progress-text');
+
+            let currentFile = null;
+
+            // Handle file selection
+            fileInput.addEventListener('change', handleFiles);
+
+            // Handle drag and drop
+            uploadArea.addEventListener('click', () => fileInput.click());
+
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadArea.classList.add('drag-over');
+            });
+
+            uploadArea.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadArea.classList.remove('drag-over');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadArea.classList.remove('drag-over');
+
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    // Only allow one file
+                    if (e.dataTransfer.files.length > 1) {
+                        showStatusMessage('Please upload only one file.', 'error');
+                        return;
+                    }
+
+                    fileInput.files = e.dataTransfer.files;
+                    handleFiles();
+                }
+            });
+
+            // Process selected files
+            function handleFiles() {
+                if (fileInput.files && fileInput.files.length > 0) {
+                    currentFile = fileInput.files[0];
+                    displaySelectedFile(currentFile);
+                }
+            }
+
+            // Display the selected file
+            function displaySelectedFile(file) {
+                fileName.textContent = file.name;
+                fileIcon.textContent = getFileIcon(file.name);
+                selectedFile.style.display = 'block';
+                uploadBtn.disabled = false;
+                clearStatus();
+            }
+
+            // Remove the selected file
+            fileRemove.addEventListener('click', () => {
+                currentFile = null;
+                fileInput.value = '';
+                selectedFile.style.display = 'none';
+                uploadBtn.disabled = true;
+            });
+
+            // Get appropriate file icon based on extension
+            function getFileIcon(fileName) {
+                const ext = fileName.toLowerCase().split('.').pop();
+                switch (ext) {
+                    case 'pdf': return '📄';
+                    case 'doc': case 'docx': return '📄';
+                    case 'txt': return '📝';
+                    case 'csv': return '📊';
+                    case 'md': return '📘';
+                    case 'rtf': return '📄';
+                    case 'ppt': case 'pptx': return '📊';
+                    default: return '📎';
+                }
+            }
+
+            // Handle upload button click
+            uploadBtn.addEventListener('click', async () => {
+                if (!currentFile) return;
+
+                // Show progress indicator
+                progressContainer.style.display = 'block';
+                progressFill.style.width = '0%';
+                progressText.textContent = '0% uploading';
+                uploadBtn.disabled = true;
+                statusMessage.style.display = 'none';
+
+                try {
+                    const formData = new FormData();
+                    formData.append('files', currentFile);
+
+                    // TODO: Replace with your actual API endpoint
+                    const API_ENDPOINT = 'http://localhost:5000/upload';
+
+                    // Simulate progress for demo
+                    let progress = 0;
+                    const progressInterval = setInterval(() => {
+                        progress += 5;
+                        if (progress >= 100) {
+                            clearInterval(progressInterval);
+                            progressFill.style.width = '100%';
+                            progressText.textContent = '100% complete';
+
+                            // Simulate API response after 1.5 seconds
+                            setTimeout(() => {
+                                showStatusMessage('Knowledge base created successfully!', 'success');
+                                progressContainer.style.display = 'none';
+                                uploadBtn.disabled = false;
+                            }, 1500);
+                        } else {
+                            progressFill.style.width = `${progress}%`;
+                            progressText.textContent = `${progress}% uploading`;
+                        }
+                    }, 150);
+
+                    // This is where you would make the actual API call
+                    const response = await fetch(API_ENDPOINT, {
+                        method: 'POST',
+                        headers: {
+                            // Add any authentication headers if needed
+                            // 'Authorization': 'Bearer your-token-here'
+                        },
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    showStatusMessage('Knowledge base created successfully!', 'success');
+
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    showStatusMessage('Failed to upload file. Please try again.', 'error');
+                    progressContainer.style.display = 'none';
+                    uploadBtn.disabled = false;
+                }
+            });
+
+            // Show status message
+            function showStatusMessage(message, type) {
+                statusMessage.textContent = message;
+                statusMessage.className = 'status-message';
+                statusMessage.classList.add(type === 'success' ? 'status-success' : 'status-error');
+                statusMessage.style.display = 'block';
+
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    statusMessage.style.display = 'none';
+                }, 5000);
+            }
+
+            // Clear status message
+            function clearStatus() {
+                statusMessage.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+
+</html>
